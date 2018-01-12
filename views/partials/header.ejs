@@ -17,7 +17,24 @@
     <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
     <link href='https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!--<script src="socket.io/socket.io.js"></script>-->
+    <script>
+      /*
+      $(document).ready(function() {
+        // call server
+        var socket = io("http://localhost:3000");
+        $("#userA").click(function () {
+           socket.emit("client-send-data", "Hello");
+        });
 
+        // client listen
+        socket.on("server-send-data", function(data) {
+          $("#noidung").append(data + "\n");
+        });
+        
+      });*/
+    </script>
     <!-- Custom styles for this template -->
     <link href="css/clean-blog.min.css" rel="stylesheet">
 
@@ -44,6 +61,9 @@
                   <li class="nav-item">
                     <a class="nav-link" href="/contact">Contact</a>
                   </li>
+                  <li class="nav-item">
+                      <a class="nav-link" href="/chat">Chat</a>
+                    </li>
                 </ul>
               </div>
             </div>
@@ -63,3 +83,6 @@
               </div>
             </div>
           </header>
+
+        
+          

@@ -1,0 +1,171 @@
+<% layout('../layout_default') %>
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://momentjs.com/downloads/moment-with-locales.min.js"></script>
+<script>
+    moment.locale('vi');   
+    var socket = io("http://localhost:3000")
+    $(document).ready(function() {
+        $("#loginForm").show();
+        $("#chatForm").hide();
+
+        $("#btnRegister").click(function() {
+            socket.emit("client-send-username", $("#txtUserName").val());
+        });
+        // lang nghe server tra ve dk fail
+        socket.on("server-send-register-fail", function() {
+            alert("This user has regestered")
+        });
+        // lang nghe server tra ve dk thanh cong
+        socket.on("server-send-register-success", function(data) {
+            $("#currentUser").html(data);
+            $("#loginForm").hide(2);
+            $("#chatForm").show(1);
+        });
+
+        socket.on("server-send-list-users", function(data) {
+            $("#userOnline").html('');
+            data.forEach(function(i) {
+                $("#userOnline").append("<div class='user'> " + i + " </div>");
+            });
+        });
+
+        //logout
+        $("#logout").click(function() {
+            socket.emit("client-send-logout", $("#txtUserName").val());
+            $("#loginForm").show(200);
+            $("#chatForm").hide(100);
+        });
+        $("#btnSend").click(function() {
+            socket.emit("user-send-messeage", $("#txtMesseage").val())
+        });
+
+        // lang nghe
+        socket.on("server-send-messeage", function(data) {
+            //console.log(data);
+            var ms = "";
+                ms += '<li class="left clearfix"><span class="chat-img pull-left">';
+                ms += '<img src="http://placehold.it/50/55C1E7/fff&amp;text=U" alt="User Avatar" class="img-circle"></span><div class="chat-body clearfix msg_left">';
+                ms += '<div class="header"><strong class="primary-font">' + data.userName + '</strong>  <div class="pull-right text-muted"><i class="fa fa-clock-o"></i> </div></div><p> ';
+                ms +=  "<div style='float:left'>" + data.messeage + "</div>";
+                ms += '</div></li>';
+                $("#listMesseage").append(ms);
+                $("#txtMesseage").val('');
+        });
+        //  event input
+        $("#txtMesseage").focusin(function() {
+            socket.emit("user-inputing");
+        });
+        // event stop input
+        $("#txtMesseage").focusout(function() {
+            socket.emit("user-stop-input");
+        });
+
+        socket.on("server-send-input", function(data) {
+            $("#typing").show().html(data + " is typing ...");
+        });
+
+        socket.on("server-stop-input", function(data) {
+            $("#typing").hide();
+        });
+
+    });
+</script>
+<link href="css/chat.css" rel="stylesheet" type="text/css" />
+<div class="container fill">
+    <div class="row">
+        <div id="loginForm">
+                <h3>What's your name?</h3>
+                <input type="text" id="txtUserName">
+                <input type="button" value="Register" id="btnRegister">
+        </div>
+    </div>
+    <div class="row chat-wrap" id="chatForm">
+        <!-- Contacts & Conversations -->
+        <div class="col-sm-3 panel-wrap" style="border: 1px solid #ccc" >
+            <!--Left Menu / Conversation List-->
+            <div class="col-sm-12 section-wrap">
+                <!--Header-->
+                <div class="row header-wrap">
+                    <div class="chat-header col-sm-12">
+                        <h4 id="username"  style="font-size:14px">User Online</h4>
+                        <div class="header-button">
+                            <a class="btn pull-right" href="#Contacts" data-toggle="collapse">
+                                <i class="fa fa-pencil-square-o fa-lg"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!--Conversations-->
+                <div class="content-wrap" style="height:500px" id="userOnline">
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages & Info -->
+        <div class="col-sm-9 panel-wrap">
+            <!--Main Content / Message List-->
+            <div class="col-sm-12 section-wrap" id="Messages" style="margin: 0px 0px 0px 10px; border: 1px solid #ccc;">
+                <!--Header-->
+                <div class="row header-wrap">
+                    <div class="chat-header col-sm-12">
+                        <i class="fa fa-comments" aria-hidden="true"></i><h4 style="font-size:14px"> Conversation Title </h4>
+                        
+                        <div class="header-button">
+                            <a class="btn pull-right info-btn">
+                                <i class="fa fa-info-circle fa-lg"></i>
+                                Hi <span style="color:white" id="currentUser">Tuan</span>
+                                <input type="button" value="logout" id="logout">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!--Messages-->
+                <div class="row content-wrap messages"  style="height:500px; width:100%;">
+                    <div class="msg"  style="width:100%">
+                        <div class="media-body">
+                            <ul class="chat" id="listMesseage">
+                                    
+                                    <li class="right clearfix"><span class="chat-img pull-right">
+                                        <img src="http://placehold.it/50/FA6F57/fff&amp;text=ME" alt="User Avatar" class="img-circle">
+                                    </span>
+                                        <div class="chat-body clearfix msg_right">
+                                            <div class="header">
+                                                <small class=" text-muted"><i class="fa fa-clock-o"></i> 13 mins ago</small>
+                                                <strong class="pull-right primary-font">Bhaumik Patel</strong>
+                                            </div>
+                                            <p>
+                                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur bibendum ornare
+                                                dolor, quis ullamcorper ligula sodales.
+                                            </p>
+                                        </div>
+                                    </li>
+                                
+                                </ul>
+                                </div>
+                                <div id="typing" style=" position:absolute; bottom: 70px; font-size:14px"></div>
+                    </div>
+                   
+                   
+                </div>
+                
+                <!--Message box & Send Button-->
+                
+                <div class="row send-wrap">
+                    <div class="send-message">
+                        
+                        <div class="message-text">
+                            <textarea class="no-resize-bar form-control" rows="2" placeholder="Write a message..." id="txtMesseage"></textarea>
+                        </div>
+                        <div class="send-button">
+                            <a class="btn" id="btnSend">Send <i class="fa fa-send"></i></a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            
+        </div>
+    </div>
+</div>
