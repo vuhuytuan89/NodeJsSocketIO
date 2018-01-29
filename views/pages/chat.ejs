@@ -2,19 +2,24 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="https://momentjs.com/downloads/moment-with-locales.min.js"></script>
 <script>
-    moment.locale('vi');   
-    var socket = io("http://localhost:3000")
+    moment.locale('en');   
+    var messageTimeSent = $(".timesent");
+    var socket = io("http://localhost:3001")
+
     $(document).ready(function() {
+
         $("#loginForm").show();
         $("#chatForm").hide();
 
         $("#btnRegister").click(function() {
             socket.emit("client-send-username", $("#txtUserName").val());
         });
+
         // lang nghe server tra ve dk fail
         socket.on("server-send-register-fail", function() {
             alert("This user has regestered")
         });
+
         // lang nghe server tra ve dk thanh cong
         socket.on("server-send-register-success", function(data) {
             $("#currentUser").html(data);
@@ -35,6 +40,7 @@
             $("#loginForm").show(200);
             $("#chatForm").hide(100);
         });
+
         $("#btnSend").click(function() {
             socket.emit("user-send-messeage", $("#txtMesseage").val())
         });
@@ -42,19 +48,17 @@
         // lang nghe
         socket.on("server-send-messeage", function(data) {
             //console.log(data);
-            var ms = "";
-                ms += '<li class="left clearfix"><span class="chat-img pull-left">';
-                ms += '<img src="http://placehold.it/50/55C1E7/fff&amp;text=U" alt="User Avatar" class="img-circle"></span><div class="chat-body clearfix msg_left">';
-                ms += '<div class="header"><strong class="primary-font">' + data.userName + '</strong>  <div class="pull-right text-muted"><i class="fa fa-clock-o"></i> </div></div><p> ';
-                ms +=  "<div style='float:left'>" + data.messeage + "</div>";
-                ms += '</div></li>';
-                $("#listMesseage").append(ms);
-                $("#txtMesseage").val('');
+           
+            createChatMessage(data, moment());
+            scrollToBottom();
+            
         });
+
         //  event input
         $("#txtMesseage").focusin(function() {
             socket.emit("user-inputing");
         });
+
         // event stop input
         $("#txtMesseage").focusout(function() {
             socket.emit("user-stop-input");
@@ -67,6 +71,60 @@
         socket.on("server-stop-input", function(data) {
             $("#typing").hide();
         });
+
+        // Update the relative time stamps on the chat messages every minute
+        function createChatMessage(data, now) {
+            var currentUser = $("#currentUser").html();
+            if (data.userName != currentUser) {
+                var ms = '\
+                    <li class="left clearfix"><span class="chat-img pull-left">\
+                                <img src="http://placehold.it/50/55C1E7/fff&amp;text=U" alt="User Avatar" class="img-circle">\
+                            </span>\
+                                <div class="chat-body clearfix">\
+                                    <div class="header">\
+                                        <strong class="primary-font">' + data.userName + '</strong> <small class="pull-right text-muted">\
+                                            <span class="glyphicon glyphicon-time">\
+                                            </span><i class="timesent" data-time=' + now + '></i></small>\
+                                    </div>\
+                                    <p> ' + data.messeage + '</p>\
+                                </div>\
+                            </li>\
+                ';
+            } else {
+                var ms = '\
+                <li class="right clearfix"><span class="chat-img pull-right">\
+                            <img src="http://placehold.it/50/FA6F57/fff&amp;text=ME" alt="User Avatar" class="img-circle">\
+                        </span>\
+                            <div class="chat-body clearfix">\
+                                <div class="header">\
+                                    <small class=" text-muted"><span class="glyphicon glyphicon-time"></span><i class="timesent" data-time=' + now + '></i></small>\
+                                    <strong class="pull-right primary-font">' + data.userName + '</strong>\
+                                </div>\
+                                <p> ' + data.messeage + '</p>\
+                            </div>\
+                        </li>\
+                ';
+            }
+
+            $("#listMesseage").append(ms);
+            $("#txtMesseage").val('');
+
+            messageTimeSent = $(".timesent");
+            messageTimeSent.last().text(now.fromNow());
+
+        }
+
+        setInterval(function(){
+            messageTimeSent.each(function(){
+                var each = moment($(this).data('time'));
+                $(this).text(each.fromNow());
+            });
+
+        },60000);
+
+        function scrollToBottom(){
+            $(".content-wrap").animate({ scrollTop: $(document).height()-$(window).height() },1000);
+        }
 
     });
 </script>
@@ -114,7 +172,7 @@
                         <div class="header-button">
                             <a class="btn pull-right info-btn">
                                 <i class="fa fa-info-circle fa-lg"></i>
-                                Hi <span style="color:white" id="currentUser">Tuan</span>
+                                Hi <span style="color:white" id="currentUser"></span>
                                 <input type="button" value="logout" id="logout">
                             </a>
                         </div>
@@ -143,7 +201,9 @@
                                 
                                 </ul>
                                 </div>
-                                <div id="typing" style=" position:absolute; bottom: 70px; font-size:14px"></div>
+                                <div id="typing" style=" position:absolute; bottom: 70px; font-size:14px">
+                                    
+                                </div>
                     </div>
                    
                    
@@ -153,7 +213,6 @@
                 
                 <div class="row send-wrap">
                     <div class="send-message">
-                        
                         <div class="message-text">
                             <textarea class="no-resize-bar form-control" rows="2" placeholder="Write a message..." id="txtMesseage"></textarea>
                         </div>
